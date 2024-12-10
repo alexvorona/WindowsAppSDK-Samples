@@ -6,7 +6,7 @@ using PhotoEditor.Services;
 
 namespace PhotoEditor.ViewModels
 {
-    public class ImageViewModel : BaseViewModel
+    public class ImageFileViewModel : BaseViewModel
     {
         private readonly ImageService _imageService;
 
@@ -26,7 +26,7 @@ namespace PhotoEditor.ViewModels
             set => SetProperty(ref _thumbnail, value);
         }
 
-        public ImageViewModel(ImageFileInfo imageInfo, ImageService imageService)
+        public ImageFileViewModel(ImageFileInfo imageInfo, ImageService imageService)
         {
             ImageInfo = imageInfo ?? throw new ArgumentNullException(nameof(imageInfo));
             _imageService = imageService ?? throw new ArgumentNullException(nameof(imageService));

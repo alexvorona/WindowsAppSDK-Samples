@@ -8,7 +8,7 @@ using Windows.Graphics.Imaging;
 using Microsoft.Graphics.Canvas;
 using System;
 
-namespace PhotoEditor
+namespace PhotoEditor.ViewModels
 {
     public class DetailPageViewModel : INotifyPropertyChanged
     {

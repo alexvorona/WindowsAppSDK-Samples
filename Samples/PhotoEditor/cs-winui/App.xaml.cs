@@ -29,7 +29,7 @@ namespace PhotoEditor
             // Register ViewModels
             services.AddTransient<MainPageViewModel>();
             services.AddTransient<DetailPageViewModel>();
-            services.AddTransient<ImageViewModel>();
+            services.AddTransient<ImageFileViewModel>();
 
             // Register other services
             services.AddSingleton<ImageService>();
