@@ -15,11 +15,19 @@ using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation.Metadata;
+using PhotoEditor.Services;
+using PhotoEditor.Models;
+using Microsoft.UI.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using PhotoEditor.ViewModels;
 
 namespace PhotoEditor
 {
     public sealed partial class DetailPage : Page
     {
+        public DetailPageViewModel ViewModel { get; }
+        private ImageService _imageService { get; set; }
+
         ImageFileInfo item;
         CultureInfo culture = CultureInfo.CurrentCulture;
         bool canNavigateWithUnsavedChanges = false;
@@ -27,6 +35,9 @@ namespace PhotoEditor
 
         public DetailPage()
         {
+            var services = ((App)Application.Current).Services;
+            ViewModel = services.GetRequiredService<DetailPageViewModel>();
+            _imageService = services.GetRequiredService<ImageService>();
             this.InitializeComponent();
         }
 
@@ -34,7 +45,7 @@ namespace PhotoEditor
         {
             item = e.Parameter as ImageFileInfo;
             canNavigateWithUnsavedChanges = false;
-            ImageSource = await item.GetImageSourceAsync();
+            ImageSource = await _imageService.GetImageSourceAsync(item.ImageFile);
 
             if (item != null)
             {
@@ -284,7 +295,7 @@ namespace PhotoEditor
             MainPage.Current.UpdatePersistedItem(item);
 
             // Update BitMapImage used for small picture.
-            ImageSource = await item.GetImageSourceAsync();
+            ImageSource = await _imageService.GetImageSourceAsync(item.ImageFile);
             SmallImage.Source = ImageSource;
         }
 

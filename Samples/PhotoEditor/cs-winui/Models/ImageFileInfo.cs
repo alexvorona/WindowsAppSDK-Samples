@@ -1,87 +1,44 @@
-﻿// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
-using Windows.Storage.Streams;
-using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace PhotoEditor
+namespace PhotoEditor.Models
 {
     public class ImageFileInfo : INotifyPropertyChanged
     {
-        public ImageFileInfo(ImageProperties properties, StorageFile imageFile, string name, string type)
-        {
-            ImageProperties = properties;
-            ImageName = name;
-            ImageFileType = type;
-            ImageFile = imageFile;
-            var rating = (int)properties.Rating;
-            var random = new Random();
-            ImageRating = rating == 0 ? random.Next(1, 5) : rating;
-        }
+        private string _imageTitle;
+        private uint _imageRating;
 
         public StorageFile ImageFile { get; }
-
         public ImageProperties ImageProperties { get; }
 
-        public async Task<BitmapImage> GetImageSourceAsync()
-        {
-            using (IRandomAccessStream fileStream = await ImageFile.OpenReadAsync())
-            {
-                // Create a bitmap to be the image source.
-                BitmapImage bitmapImage = new BitmapImage();
-                bitmapImage.SetSource(fileStream);
-
-                return bitmapImage;
-            }
-        }
-
-        public async Task<BitmapImage> GetImageThumbnailAsync()
-        {
-            var thumbnail = await ImageFile.GetThumbnailAsync(ThumbnailMode.PicturesView);
-            // Create a bitmap to be the image source.
-            BitmapImage bitmapImage = new BitmapImage();
-            bitmapImage.SetSource(thumbnail);
-            thumbnail.Dispose();
-
-            return bitmapImage;
-        }
-
         public string ImageName { get; }
-
         public string ImageFileType { get; }
 
         public string ImageDimensions => $"{ImageProperties.Width} x {ImageProperties.Height}";
 
         public string ImageTitle
         {
-            get => String.IsNullOrEmpty(ImageProperties.Title) ? ImageName : ImageProperties.Title;
+            get => string.IsNullOrEmpty(_imageTitle) ? ImageName : _imageTitle;
             set
             {
-                if (ImageProperties.Title != value)
+                if (SetProperty(ref _imageTitle, value))
                 {
                     ImageProperties.Title = value;
-                    var ignoreResult = ImageProperties.SavePropertiesAsync();
-                    OnPropertyChanged();
                 }
             }
         }
 
-        public int ImageRating
+        public uint ImageRating
         {
-            get => (int)ImageProperties.Rating;
+            get => _imageRating;
             set
             {
-                if (ImageProperties.Rating != value)
+                if (SetProperty(ref _imageRating, value))
                 {
                     ImageProperties.Rating = (uint)value;
-                    var ignoreResult = ImageProperties.SavePropertiesAsync();
-                    OnPropertyChanged();
                 }
             }
         }
@@ -135,9 +92,22 @@ namespace PhotoEditor
             set => SetProperty(ref _needsSaved, value);
         }
 
+        public ImageFileInfo(ImageProperties properties, StorageFile imageFile, string name, string type)
+        {
+            ImageProperties = properties ?? throw new ArgumentNullException(nameof(properties));
+            ImageFile = imageFile ?? throw new ArgumentNullException(nameof(imageFile));
+            ImageName = name ?? throw new ArgumentNullException(nameof(name));
+            ImageFileType = type ?? throw new ArgumentNullException(nameof(type));
+
+            // Initialize from existing properties
+            _imageRating = properties.Rating;
+            _imageTitle = properties.Title;
+        }
+
+        // INotifyPropertyChanged Implementation
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         protected bool SetEditingProperty<T>(ref T storage, T value, [CallerMemberName] String propertyName = null)
@@ -159,19 +129,14 @@ namespace PhotoEditor
                 return false;
             }
         }
-
-        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] String propertyName = null)
+        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
         {
-            if (object.Equals(storage, value))
-            {
+            if (Equals(storage, value))
                 return false;
-            }
-            else
-            {
-                storage = value;
-                OnPropertyChanged(propertyName);
-                return true;
-            }
+
+            storage = value;
+            OnPropertyChanged(propertyName);
+            return true;
         }
     }
 }

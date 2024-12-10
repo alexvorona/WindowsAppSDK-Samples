@@ -18,11 +18,19 @@ using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation.Metadata;
+using PhotoEditor.Services;
+using PhotoEditor.ViewModels;
+using Microsoft.UI.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using PhotoEditor.Models;
 
 namespace PhotoEditor
 {
     public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
+        public MainPageViewModel ViewModel { get; }
+        private ImageService _imageService { get; set; }
+
         public static MainPage Current;
         private ImageFileInfo persistedItem;
 
@@ -31,6 +39,9 @@ namespace PhotoEditor
 
         public MainPage()
         {
+            var services = ((App)Application.Current).Services;
+            ViewModel = services.GetRequiredService<MainPageViewModel>();
+            _imageService = services.GetRequiredService<ImageService>();
             this.InitializeComponent();
             Current = this;
         }
@@ -214,7 +225,7 @@ namespace PhotoEditor
 
                 try
                 {
-                    image.Source = await item.GetImageThumbnailAsync();
+                    image.Source = await _imageService.GetImageThumbnailAsync(item.ImageFile);
                 }
                 catch (Exception)
                 {
